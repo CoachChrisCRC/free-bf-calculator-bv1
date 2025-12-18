@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Body Fat Calculator - Coach Chris</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Oswald:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+        }
+
+        .font-brand {
+            font-family: 'Oswald', sans-serif;
+        }
+
+        /* Black Card Appearance */
+        .app-card {
+            background-color: #121212;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            border: 1px solid #262626;
+        }
+
+        input, select {
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            color: #ffffff;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #ffffff;
+            background-color: #222222;
+        }
+        
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        .input-group-transition {
+            transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out;
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+        }
+        .input-group-transition.active {
+            max-height: 150px;
+            opacity: 1;
+        }
+
+        .result-box {
+            background-color: #1a1a1a;
+            border: 1px solid #262626;
+        }
+
+        .unit-toggle-bg {
+            background-color: #1a1a1a;
+            border: 1px solid #262626;
+        }
+
+        .unit-btn-active {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        .unit-btn-inactive {
+            color: #737373;
+        }
+
+        /* Custom scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="app-card w-full max-w-md rounded-3xl overflow-hidden flex flex-col items-center">
+        
+        <header class="w-full px-8 pt-10 pb-6 flex justify-between items-start">
+            <div class="flex flex-col select-none text-left">
+                <h1 class="font-brand font-bold text-4xl leading-none tracking-wide text-white mb-1">COACH CHRIS</h1>
+                <h2 class="font-brand font-bold text-lg leading-none text-neutral-400 mb-[2px]">CIRCULAR ROOTS COACHING</h2>
+                <h3 class="font-brand font-bold text-lg leading-none text-neutral-600 uppercase">Train Uncnvntnl</h3>
+            </div>
+            
+            <button class="text-neutral-400 hover:text-white transition-colors pt-1" aria-label="Menu">
+                <i data-lucide="scan" class="w-8 h-8"></i>
+            </button>
+        </header>
+
+        <main class="w-full px-8 flex-grow pb-12">
+            
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-black text-white uppercase tracking-tight">Free Body Fat Calculator</h2>
+                <p class="text-neutral-500 text-xs mt-2 leading-relaxed">
+                    Uses the US Navy Body Fat Formula.<br>Inputs can be Metric or Imperial.
+                </p>
+            </div>
+
+            <div class="flex justify-center mb-8">
+                <div id="unit-toggle" class="flex p-1 unit-toggle-bg rounded-xl">
+                    <button data-unit="metric" class="unit-btn px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 unit-btn-active shadow-sm">Metric (kg, cm)</button>
+                    <button data-unit="imperial" class="unit-btn px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 unit-btn-inactive hover:text-neutral-300">Imperial (lbs, ft/in)</button>
+                </div>
+            </div>
+
+            <form id="calculator-form" class="space-y-4">
+                
+                <label class="block">
+                    <span class="text-xs font-black uppercase tracking-wider text-neutral-500 block mb-1.5 ml-1">Gender</span>
+                    <select id="gender" required class="w-full text-sm font-medium">
+                        <option value="">Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </label>
+                
+                <label class="block">
+                    <span class="text-xs font-black uppercase tracking-wider text-neutral-500 block mb-1.5 ml-1" id="label-weight">Weight (kg)</span>
+                    <input type="number" id="weight" min="1" max="1000" step="0.1" placeholder="e.g. 80.5" class="w-full text-sm font-medium" required>
+                </label>
+
+                <!-- Height Container -->
+                <div id="height-container">
+                    <span class="text-xs font-black uppercase tracking-wider text-neutral-500 block mb-1.5 ml-1" id="label-height">Height (cm)</span>
+                    <!-- Metric Height -->
+                    <div id="metric-height-box">
+                        <input type="number" id="height_cm" min="50" max="300" step="0.1" placeholder="e.g. 180" class="w-full text-sm font-medium">
+                    </div>
+                    <!-- Imperial Height -->
+                    <div id="imperial-height-box" class="hidden flex gap-2">
+                        <div class="flex-1">
+                            <input type="number" id="height_ft" min="1" max="9" placeholder="Ft" class="w-full text-sm font-medium">
+                        </div>
+                        <div class="flex-1">
+                            <input type="number" id="height_in" min="0" max="11.9" step="0.1" placeholder="In" class="w-full text-sm font-medium">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="neck-input-group">
+                    <div class="flex justify-between items-center mb-1.5 ml-1">
+                        <label class="text-xs font-black uppercase tracking-wider text-neutral-500" id="label-neck">Neck (cm)</label>
+                        <button type="button" id="info-neck-btn" class="text-neutral-600 hover:text-white transition-colors">
+                            <i data-lucide="info" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <input type="number" id="neck" min="1" max="200" step="0.1" placeholder="e.g. 40.0" class="w-full text-sm font-medium" required>
+                </div>
+
+                <div id="waist-input-group">
+                    <div class="flex justify-between items-center mb-1.5 ml-1">
+                        <label class="text-xs font-black uppercase tracking-wider text-neutral-500" id="label-waist">Waist (cm)</label>
+                        <button type="button" id="info-waist-btn" class="text-neutral-600 hover:text-white transition-colors">
+                            <i data-lucide="info" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <input type="number" id="waist" min="1" max="300" step="0.1" placeholder="e.g. 90.0" class="w-full text-sm font-medium" required>
+                </div>
+                
+                <div id="hip-input-container" class="input-group-transition">
+                    <div class="flex justify-between items-center mb-1.5 ml-1">
+                        <label class="text-xs font-black uppercase tracking-wider text-neutral-500" id="label-hip">Hips (cm)</label>
+                        <button type="button" id="info-hip-btn" class="text-neutral-600 hover:text-white transition-colors">
+                            <i data-lucide="info" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <input type="number" id="hip" min="1" max="300" step="0.1" placeholder="e.g. 100.0" class="w-full text-sm font-medium">
+                </div>
+
+                <button type="submit" id="calculate-btn" class="w-full mt-6 py-4 bg-white text-black text-base font-black uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition-all shadow-lg shadow-white/5 active:scale-[0.98]">
+                    Calculate Bodyfat
+                </button>
+            </form>
+
+            <div id="results" class="hidden mt-10 pt-8 border-t border-neutral-800 space-y-6">
+                <div class="text-center">
+                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-neutral-500 mb-4">Estimated Body Composition</h3>
+                    
+                    <div class="p-6 rounded-2xl result-box text-center shadow-inner">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-1">Body Fat Percentage</p>
+                        <p class="text-6xl font-brand font-bold text-white" id="bf-percentage-main">
+                            <span id="bf-percentage">0.0%</span>
+                        </p>
+                        <div class="inline-block mt-3 px-3 py-1 bg-white text-black text-[10px] font-black uppercase rounded-full" id="bf-traditional-category"></div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 rounded-xl result-box text-center">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-neutral-500">Fat Mass</span>
+                        <span class="block text-lg font-bold text-white mt-1" id="fat-mass"></span>
+                    </div>
+                    <div class="p-4 rounded-xl result-box text-center">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-neutral-500">Lean Mass</span>
+                        <span class="block text-lg font-bold text-white mt-1" id="lean-mass"></span>
+                    </div>
+                </div>
+                
+                <div id="about-result-section" class="space-y-4">
+                    <h4 class="text-xs font-black uppercase tracking-widest text-white border-b border-neutral-800 pb-2">About This Result</h4>
+                    <p id="result-interpretation" class="text-xs text-neutral-400 leading-relaxed"></p>
+                    
+                    <div class="bg-neutral-900/50 p-5 rounded-xl border border-neutral-800">
+                        <h4 class="text-[10px] font-black uppercase tracking-widest text-white mb-3">Support and Guidance</h4>
+                        <ul id="guidance-list" class="space-y-3 text-[11px] text-neutral-400 list-disc list-inside ml-2">
+                        </ul>
+                    </div>
+                </div>
+
+                <p class="text-[10px] text-center italic text-neutral-600 px-4">
+                    Accuracy depends on precise measurements. Use for tracking trends rather than medical analysis.
+                </p>
+                
+                <button type="button" id="reset-btn" class="w-full flex items-center justify-center py-3 text-[10px] font-black uppercase tracking-widest text-neutral-500 border border-neutral-800 rounded-xl hover:text-white hover:border-white transition-all">
+                    <i data-lucide="rotate-ccw" class="w-3 h-3 mr-2"></i>
+                    Recalculate
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="neck-info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" id="modal-backdrop-neck"></div>
+        <div class="relative bg-neutral-900 border border-neutral-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-sm font-black uppercase tracking-widest text-left text-white">Measure Neck</h3>
+                <button type="button" id="modal-close-neck-btn" class="text-neutral-500 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <ul class="text-xs text-neutral-400 space-y-3 list-disc list-inside text-left">
+                <li>Stand upright with your head facing forward.</li>
+                <li>Place the tape measure just below the **larynx (Adam's apple)**, ensuring the tape measure is **level**.</li>
+                <li>Do not pull the tape tight; allow it to rest gently.</li>
+                <li>Take the measurement on a **normal exhale**.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="waist-info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" id="modal-backdrop-waist"></div>
+        <div class="relative bg-neutral-900 border border-neutral-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-sm font-black uppercase tracking-widest text-left text-white">Measure Waist</h3>
+                <button type="button" id="modal-close-waist-btn" class="text-neutral-500 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <ul class="text-xs text-neutral-400 space-y-3 list-disc list-inside text-left">
+                <li>Measure horizontally at the level of the **navel (belly button)**.</li>
+                <li>Ensure the tape measure is **level** all the way around.</li>
+                <li>Take the measurement on a **normal exhale**.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="hip-info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" id="modal-backdrop-hip"></div>
+        <div class="relative bg-neutral-900 border border-neutral-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-sm font-black uppercase tracking-widest text-left text-white">Measure Hips</h3>
+                <button type="button" id="modal-close-hip-btn" class="text-neutral-500 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <ul class="text-xs text-neutral-400 space-y-3 list-disc list-inside text-left">
+                <li>Required for females only.</li>
+                <li>Measure horizontally around the **widest part of the hips/buttocks**.</li>
+                <li>Ensure tape is perfectly level.</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer class="w-full text-center py-8 text-neutral-700 text-[10px] uppercase tracking-[0.2em] font-bold">
+        <p>&copy; 2024 Circular Roots Coaching. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('calculator-form');
+            const resultsDiv = document.getElementById('results');
+            const genderSelect = document.getElementById('gender');
+            const hipInputContainer = document.getElementById('hip-input-container');
+            const unitToggle = document.getElementById('unit-toggle');
+            
+            // Elements
+            const labelWeight = document.getElementById('label-weight');
+            const labelHeight = document.getElementById('label-height');
+            const labelNeck = document.getElementById('label-neck');
+            const labelWaist = document.getElementById('label-waist');
+            const labelHip = document.getElementById('label-hip');
+            
+            const weightInput = document.getElementById('weight');
+            const metricHeightBox = document.getElementById('metric-height-box');
+            const imperialHeightBox = document.getElementById('imperial-height-box');
+            const heightCmInput = document.getElementById('height_cm');
+            const heightFtInput = document.getElementById('height_ft');
+            const heightInInput = document.getElementById('height_in');
+            const neckInput = document.getElementById('neck');
+            const waistInput = document.getElementById('waist');
+            const hipInput = document.getElementById('hip');
+
+            let currentUnit = 'metric';
+            const CM_TO_INCH = 1 / 2.54;
+            const KG_TO_LBS = 2.20462;
+
+            function switchUnits(newUnit) {
+                if (newUnit === currentUnit) return;
+                currentUnit = newUnit;
+
+                document.querySelectorAll('.unit-btn').forEach(btn => {
+                    if (btn.dataset.unit === newUnit) {
+                        btn.classList.add('unit-btn-active', 'shadow-sm');
+                        btn.classList.remove('unit-btn-inactive');
+                    } else {
+                        btn.classList.remove('unit-btn-active', 'shadow-sm');
+                        btn.classList.add('unit-btn-inactive');
+                    }
+                });
+
+                if (newUnit === 'imperial') {
+                    labelWeight.textContent = 'Weight (lbs)';
+                    labelHeight.textContent = 'Height (ft/in)';
+                    labelNeck.textContent = 'Neck (in)';
+                    labelWaist.textContent = 'Waist (in)';
+                    labelHip.textContent = 'Hips (in)';
+                    
+                    metricHeightBox.classList.add('hidden');
+                    imperialHeightBox.classList.remove('hidden');
+                    heightCmInput.required = false;
+                    heightFtInput.required = true;
+                    heightInInput.required = true;
+
+                    if (weightInput.value) weightInput.value = (parseFloat(weightInput.value) * KG_TO_LBS).toFixed(1);
+                    if (neckInput.value) neckInput.value = (parseFloat(neckInput.value) * CM_TO_INCH).toFixed(1);
+                    if (waistInput.value) waistInput.value = (parseFloat(waistInput.value) * CM_TO_INCH).toFixed(1);
+                    if (hipInput.value) hipInput.value = (parseFloat(hipInput.value) * CM_TO_INCH).toFixed(1);
+                    
+                    if (heightCmInput.value) {
+                        const totalIn = parseFloat(heightCmInput.value) * CM_TO_INCH;
+                        heightFtInput.value = Math.floor(totalIn / 12);
+                        heightInInput.value = (totalIn % 12).toFixed(1);
+                    }
+                } else {
+                    labelWeight.textContent = 'Weight (kg)';
+                    labelHeight.textContent = 'Height (cm)';
+                    labelNeck.textContent = 'Neck (cm)';
+                    labelWaist.textContent = 'Waist (cm)';
+                    labelHip.textContent = 'Hips (cm)';
+                    
+                    metricHeightBox.classList.remove('hidden');
+                    imperialHeightBox.classList.add('hidden');
+                    heightCmInput.required = true;
+                    heightFtInput.required = false;
+                    heightInInput.required = false;
+
+                    if (weightInput.value) weightInput.value = (parseFloat(weightInput.value) / KG_TO_LBS).toFixed(1);
+                    if (neckInput.value) neckInput.value = (parseFloat(neckInput.value) / CM_TO_INCH).toFixed(1);
+                    if (waistInput.value) waistInput.value = (parseFloat(waistInput.value) / CM_TO_INCH).toFixed(1);
+                    if (hipInput.value) hipInput.value = (parseFloat(hipInput.value) / CM_TO_INCH).toFixed(1);
+
+                    if (heightFtInput.value || heightInInput.value) {
+                        const ft = parseFloat(heightFtInput.value || 0);
+                        const inc = parseFloat(heightInInput.value || 0);
+                        const totalIn = (ft * 12) + inc;
+                        heightCmInput.value = (totalIn / CM_TO_INCH).toFixed(1);
+                    }
+                }
+                resultsDiv.classList.add('hidden');
+            }
+
+            unitToggle.addEventListener('click', (e) => {
+                if (e.target.classList.contains('unit-btn')) switchUnits(e.target.dataset.unit);
+            });
+
+            function setupModal(infoBtnId, modalId, closeBtnId, backdropId) {
+                const infoBtn = document.getElementById(infoBtnId);
+                const modal = document.getElementById(modalId);
+                const closeBtn = document.getElementById(closeBtnId);
+                const backdrop = document.getElementById(backdropId);
+                if (infoBtn) infoBtn.onclick = () => modal.classList.remove('hidden');
+                if (closeBtn) closeBtn.onclick = () => modal.classList.add('hidden');
+                if (backdrop) backdrop.onclick = () => modal.classList.add('hidden');
+            }
+            
+            setupModal('info-neck-btn', 'neck-info-modal', 'modal-close-neck-btn', 'modal-backdrop-neck');
+            setupModal('info-waist-btn', 'waist-info-modal', 'modal-close-waist-btn', 'modal-backdrop-waist');
+            setupModal('info-hip-btn', 'hip-info-modal', 'modal-close-hip-btn', 'modal-backdrop-hip');
+            
+            function updateGenderUI() {
+                const isFemale = genderSelect.value === 'female';
+                resultsDiv.classList.add('hidden');
+                if (isFemale) {
+                    hipInputContainer.classList.add('active');
+                    hipInput.required = true;
+                } else {
+                    hipInputContainer.classList.remove('active');
+                    hipInput.required = false;
+                    hipInput.value = '';
+                }
+            }
+            genderSelect.addEventListener('change', updateGenderUI);
+
+            function getTraditionalCategory(gender, bfPercentage) {
+                if (gender === 'male') {
+                    if (bfPercentage < 6) return 'Essential Fat';
+                    if (bfPercentage <= 13) return 'Athletic';
+                    if (bfPercentage <= 17) return 'Fitness';
+                    if (bfPercentage <= 24) return 'Acceptable';
+                    return 'High/Obese';
+                } else {
+                    if (bfPercentage < 14) return 'Essential Fat';
+                    if (bfPercentage <= 20) return 'Athletic';
+                    if (bfPercentage <= 24) return 'Fitness';
+                    if (bfPercentage <= 31) return 'Acceptable';
+                    return 'High/Obese';
+                }
+            }
+
+            function generateInterpretation(gender, bfPercentage, category) {
+                let text = `Your estimated body fat percentage of **${bfPercentage.toFixed(1)}%** places you in the **${category}** category for ${gender === 'male' ? 'men' : 'women'}.`;
+                if (category === 'Essential Fat') text += ` This represents the minimum fat required for physiological function. Maintaining this level is extremely challenging and may not be sustainable long-term.`;
+                else if (category === 'Athletic') text += ` This is a typical range for high-level athletes focused on performance and low body weight. It generally reflects high lean mass and excellent conditioning.`;
+                else if (category === 'Fitness') text += ` This range is associated with general fitness, often reflecting a balanced diet and regular exercise routine. It is a healthy and sustainable target for most active individuals.`;
+                else if (category === 'Acceptable') text += ` This is a healthy and acceptable range for the general population. Goals focused on muscle gain or improved aesthetics might target the 'Fitness' or 'Athletic' range.`;
+                else if (category === 'High/Obese') text += ` This range may be associated with increased health risks, including cardiovascular issues. It is highly recommended to consult a healthcare professional for guidance on safe and healthy weight management strategies.`;
+                return text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>');
+            }
+
+            function generateGuidance(category) {
+                let items = [
+                    'Regularly monitor your measurements (e.g., every 1-4 weeks) at the same time and conditions to track long-term trends accurately.',
+                    'Focus on a balanced diet rich in whole foods, lean protein, and fiber for satiety and muscle maintenance.',
+                    'Ensure adequate sleep (7-9 hours) as it significantly impacts hormones related to recovery and fat storage.'
+                ];
+                if (category === 'Essential Fat') {
+                    items.push('<strong>Goal: Maintenance/Small Increase.</strong> As this is the minimum physiological fat level, focus on nutrient-dense food and potentially a small, controlled increase in body fat for long-term health and hormonal balance.');
+                    items.push('Ensure sufficient caloric intake to match your high activity level and fuel training.');
+                } else if (category === 'Athletic') {
+                    items.push('<strong>Goal: Maintenance/Performance Improvement.</strong> Focus on optimizing training-specific nutrition (timing protein/carbs) to maintain low body fat while maximizing lean mass and recovery.');
+                    items.push('Prioritize post-workout nutrition (protein and carbs) to optimize muscle recovery and growth.');
+                } else if (category === 'Fitness' || category === 'Acceptable') {
+                    items.push('<strong>Goal: Maintenance/Improvement.</strong> If aiming for a lower body fat percentage, focus on a sustainable, small caloric deficit alongside robust training.');
+                    items.push('Incorporate resistance training 2-4 times per week to preserve and build Lean Body Mass, which boosts metabolism.');
+                    items.push('If maintaining, ensure energy intake matches output and prioritize high protein intake to support existing muscle mass.');
+                } else if (category === 'High/Obese') {
+                    items.push('<strong>Goal: Sustainable Reduction.</strong> Focus on creating a small, consistent caloric deficit (250-500 kcal daily) for gradual, healthy body fat loss.');
+                    items.push('<strong>Resistance Training Focus (1-3x/week):</strong> Start with beginner-friendly sessions focused on <strong>full-body compound movements</strong> (like squats, presses, and rows). Prioritize <strong>correct, safe form</strong> and moderate weight/volume to build a solid foundation before increasing intensity.');
+                    items.push('Include low-impact physical activity (e.g., daily walking) and gradually increase intensity and duration.');
+                    items.push('<strong>Consult with a professional</strong> for a safe, personalized weight management plan, especially if you have health concerns.');
+                }
+                return items.map(i => `<li>${i}</li>`).join('');
+            }
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const gender = genderSelect.value;
+                if (!gender) return;
+
+                const weightVal = parseFloat(weightInput.value);
+                const neckVal = parseFloat(neckInput.value);
+                const waistVal = parseFloat(waistInput.value);
+                const hipVal = gender === 'female' ? parseFloat(hipInput.value) : 0;
+
+                let weightKg, heightIn, bf;
+                
+                if (currentUnit === 'metric') {
+                    weightKg = weightVal;
+                    heightIn = parseFloat(heightCmInput.value) * CM_TO_INCH;
+                    const neckIn = neckVal * CM_TO_INCH;
+                    const waistIn = waistVal * CM_TO_INCH;
+                    const hipIn = hipVal * CM_TO_INCH;
+                    
+                    if (gender === 'male') {
+                        bf = 86.010 * Math.log10(waistIn - neckIn) - 70.041 * Math.log10(heightIn) + 36.76;
+                    } else {
+                        bf = 163.205 * Math.log10(waistIn + hipIn - neckIn) - 97.684 * Math.log10(heightIn) - 78.387;
+                    }
+                } else {
+                    const weightLbs = weightVal;
+                    weightKg = weightLbs / KG_TO_LBS;
+                    heightIn = (parseFloat(heightFtInput.value) * 12) + parseFloat(heightInInput.value);
+                    
+                    if (gender === 'male') {
+                        bf = 86.010 * Math.log10(waistVal - neckVal) - 70.041 * Math.log10(heightIn) + 36.76;
+                    } else {
+                        bf = 163.205 * Math.log10(waistVal + hipVal - neckVal) - 97.684 * Math.log10(heightIn) - 78.387;
+                    }
+                }
+                
+                bf = Math.max(5, Math.min(50, isNaN(bf) ? 50 : bf));
+                const fatKg = weightKg * (bf / 100);
+                const leanKg = weightKg - fatKg;
+                
+                const unitLabel = currentUnit === 'metric' ? 'kg' : 'lbs';
+                const fatDisplay = currentUnit === 'metric' ? fatKg : fatKg * KG_TO_LBS;
+                const leanDisplay = currentUnit === 'metric' ? leanKg : leanKg * KG_TO_LBS;
+
+                const cat = getTraditionalCategory(gender, bf);
+                document.getElementById('bf-percentage').textContent = `${bf.toFixed(1)}%`; 
+                document.getElementById('bf-traditional-category').textContent = cat;
+                document.getElementById('fat-mass').textContent = `${fatDisplay.toFixed(1)} ${unitLabel}`;
+                document.getElementById('lean-mass').textContent = `${leanDisplay.toFixed(1)} ${unitLabel}`;
+                document.getElementById('result-interpretation').innerHTML = generateInterpretation(gender, bf, cat);
+                document.getElementById('guidance-list').innerHTML = generateGuidance(cat);
+
+                resultsDiv.classList.remove('hidden');
+                resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+
+            document.getElementById('reset-btn').onclick = () => {
+                form.reset();
+                resultsDiv.classList.add('hidden');
+                updateGenderUI();
+            };
+        });
+    </script>
+</body>
+</html>
+
